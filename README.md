@@ -5,5 +5,5 @@ y debera cumplir con lo siguiente
 [ ] Calcular almenos 4 operaciones basicas de una calculadora
     [ ] Sumar
     [ ] restar
-    [ ] 
-    [ ]
+    [ ] dividir
+    [ ] multiplicar

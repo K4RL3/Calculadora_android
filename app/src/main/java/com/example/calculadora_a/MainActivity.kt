@@ -1,9 +1,11 @@
 package com.example.calculadora_a
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,16 +14,46 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.calculadora_a.ui.theme.Calculadora_aTheme
+
+data class BotonModelo(val id: String, var boton: String){}
+
+var hileras_de_btn_a_dibujar = arrayOf(
+    arrayOf(
+        BotonModelo("btn_9","9",),
+        BotonModelo("btn_8","8",),
+        BotonModelo("btn_7","7",)
+    ),
+    arrayOf(
+        BotonModelo("btn_6","6",),
+        BotonModelo("btn_5","5",),
+        BotonModelo("btn_4","4",)
+    ),
+    arrayOf(
+        BotonModelo("btn_3","3",),
+        BotonModelo("btn_2","2",),
+        BotonModelo("btn_1","1",)
+    ),
+    arrayOf(
+        BotonModelo("btn_punto",".",),
+        BotonModelo("btn_0","0",),
+        BotonModelo("btn_op","OP",)
+    )
+)
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,62 +69,71 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Calculada() {
+    var  pantalla_cal = remember { mutableSetOf("0") }
+    var  estados_de_cal = remember { mutableSetOf("modtrar_numeros") }
+
+    fun pulsar_btn(boton: BotonModelo){
+        Log.v("BTN_INTERFAZ", "Se ha pulsado el boton ${boton.id} de la interfaz")
+        if (boton.id == "btn_op"){
+            estados_de_cal.value = "mostrar_ops"
+        }
+
+        if (estados_de_cal.value == "mostrar_nums"){
+            pantalla_cal.value = boton.numero
+        }
+        else{
+            pantalla_cal.value = boton.id
+        }
+
+    }
+
     Column(modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center) {
-        Text(text = "Numeritos", modifier = Modifier
-            .fillMaxWidth()
-            .padding(10.dp)
-            .background(Color.Blue)
-            .height(50.dp),
+        Text(text = "${pantalla_cal.value}", modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp)
+                    .background(Color.Blue)
+                    .height(50.dp),
             textAlign = TextAlign.Right,
+            color = Color.White,
+            fontSize = 56.sp
         )
 
-        Column (modifier = Modifier.fillMaxSize()
-            .background(Color.DarkGray)){
-            Row(horizontalArrangement = Arrangement.SpaceAround,
-                modifier = Modifier.fillMaxWidth()) {
-                Boton("7")
-                Boton("8")
-                Boton("9")
-
-            }
-            Row(horizontalArrangement = Arrangement.SpaceAround,
-                modifier = Modifier.fillMaxWidth()) {
-                Boton("4")
-                Boton("5")
-                Boton("6")
-
-            }
-            Row(horizontalArrangement = Arrangement.SpaceAround,
-                modifier = Modifier.fillMaxWidth()) {
-                Boton("1")
-                Boton("2")
-                Boton("3")
-
-            }
-            Row(horizontalArrangement = Arrangement.SpaceAround,
-                modifier = Modifier.fillMaxWidth()) {
-                Boton(".")
-                Boton("0")
-                Boton("op")
-
+        Column (modifier = Modifier.fillMaxSize().background(Color.DarkGray)){
+            for (fila_de_btn in hileras_de_btn_a_dibujar){
+                Row(horizontalArrangement = Arrangement.SpaceAround,
+                    modifier = Modifier.fillMaxWidth()) {
+                    for (btn_a_dibujar in fila_de_btn){
+                        Boton(btn_a_dibujar.boton, alPulsar ={
+                            pulsar_btn(btn_a_dibujar)
+                        })
+                }
+                }
             }
 
         }
-    }
 
+    }
 }
 
 
+
+
 @Composable
-fun Boton(etiqueta: String){
+fun Boton(etiqueta: String, alPulsar: () -> Unit = {}){
+    Boton(onClick = alPulsar){
+        Image(
+            painter = painterResource(R.drawable.conde),
+            contentDescription = "una foto de perfil del conde de contar",
+            modifier = Modifier.size(25.dp)
+        )
+    }
+
     Text(
         etiqueta, modifier = Modifier
-            .padding(25.dp)
-            .background(Color.Green)
-            .height(50.dp)
-            .width(50.dp),
+            .background(Color.Green),
         textAlign = TextAlign.Center,
+        color = Color.Red
         //fontSize
     )
 }
