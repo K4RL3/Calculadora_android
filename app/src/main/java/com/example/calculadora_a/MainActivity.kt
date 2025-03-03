@@ -16,9 +16,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.calculadora_a.ui.theme.Calculadora_aTheme
 
-data class BotonModelo(val id: String, var boton: String){}
+data class BotonModelo(val id: String, var numero: String){}
 
 var hileras_de_btn_a_dibujar = arrayOf(
     arrayOf(
@@ -69,8 +71,8 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun Calculada() {
-    var  pantalla_cal = remember { mutableSetOf("0") }
-    var  estados_de_cal = remember { mutableSetOf("modtrar_numeros") }
+    var  pantalla_cal = remember { mutableStateOf("0") }
+    var  estados_de_cal = remember { mutableStateOf("modtrar_numeros") }
 
     fun pulsar_btn(boton: BotonModelo){
         Log.v("BTN_INTERFAZ", "Se ha pulsado el boton ${boton.id} de la interfaz")
@@ -104,7 +106,7 @@ fun Calculada() {
                 Row(horizontalArrangement = Arrangement.SpaceAround,
                     modifier = Modifier.fillMaxWidth()) {
                     for (btn_a_dibujar in fila_de_btn){
-                        Boton(btn_a_dibujar.boton, alPulsar ={
+                        Boton(btn_a_dibujar.numero, alPulsar ={
                             pulsar_btn(btn_a_dibujar)
                         })
                 }
@@ -121,7 +123,7 @@ fun Calculada() {
 
 @Composable
 fun Boton(etiqueta: String, alPulsar: () -> Unit = {}){
-    Boton(onClick = alPulsar){
+    Button(onClick = alPulsar){
         Image(
             painter = painterResource(R.drawable.conde),
             contentDescription = "una foto de perfil del conde de contar",
