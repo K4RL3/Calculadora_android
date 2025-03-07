@@ -1,5 +1,6 @@
 package com.example.calculadora_a
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -38,9 +40,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import com.example.calculadora_a.EstadosCalculadora.*
 import com.example.calculadora_a.ui.theme.Blanc
 import com.example.calculadora_a.ui.theme.Calculadora_aTheme
 import com.example.calculadora_a.ui.theme.GreenB
@@ -73,19 +78,19 @@ enum class OperacionesAritmeticas{
 
 var hileras_de_botones_a_dibujar = arrayOf(
     arrayOf(
-        BotonModelo("btn_9", "9", OperacionesAritmeticas.Multiplicacion, "*"),
+        BotonModelo("btn_7", "7", OperacionesAritmeticas.Suma, "+"),
         BotonModelo("btn_8", "8"),
-        BotonModelo("btn_7", "7", OperacionesAritmeticas.Division, "/"),
+        BotonModelo("btn_9", "9", OperacionesAritmeticas.Resta, "-"),
     ),
     arrayOf(
-        BotonModelo("btn_6", "6"),
-        BotonModelo("btn_5", "5", OperacionesAritmeticas.Resultado, "="),
         BotonModelo("btn_4", "4"),
+        BotonModelo("btn_5", "5", OperacionesAritmeticas.Resultado, "="),
+        BotonModelo("btn_6", "6"),
     ),
     arrayOf(
-        BotonModelo("btn_3", "3", OperacionesAritmeticas.Suma, "+"),
+        BotonModelo("btn_1", "1", OperacionesAritmeticas.Division, "/"),
         BotonModelo("btn_2", "2"),
-        BotonModelo("btn_1", "1", OperacionesAritmeticas.Resta, "-"),
+        BotonModelo("btn_3", "3", OperacionesAritmeticas.Multiplicacion, "*"),
     ),
     arrayOf(
         BotonModelo("btn_p", "."),
@@ -101,36 +106,35 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Calculadora_aTheme {
-                Calculadora()
+                Calculadora(modifier = Modifier.fillMaxSize(), contexto = this)
             }
         }
     }
 }
 
 @Composable
-fun Calculadora() {
+fun Calculadora(modifier: Modifier, contexto: Context? = null) {
     var pantalla_cal = remember { mutableStateOf("0") }
     var numero_anterior = remember { mutableStateOf("0") }
     var estado_de_la_calculadora = remember { mutableStateOf(EstadosCalculadora.CuandoEstaEnCero) }
     var operacion_seleccionada = remember { mutableStateOf(OperacionesAritmeticas.Ninguna) }
 
     fun pulsar_boton(boton: BotonModelo){
-        Log.v("BTN_INTERFAZ", "Se ha pulsado el boton ${boton.id}")
-        Log.v("OP_SELECCIONADA", "La operacion es ${operacion_seleccionada.value}")
+        Log.v("BOTONES_INTERFAZ", "Se ha pulsado el boton ${boton.id} de la interfaz")
+        Log.v("OPERACION_SELECCIONADA", "La operacion seleccionada es ${operacion_seleccionada.value}")
 
         when(estado_de_la_calculadora.value){
             EstadosCalculadora.CuandoEstaEnCero -> {
-                if(boton.id == "boton_0"){
+                if(boton.id == "btn_0"){
                     return
                 }
-                else if(boton.id == "boton_punto"){
+                else if(boton.id == "btn_p"){
                     pantalla_cal.value = pantalla_cal.value + boton.numero
                     return
                 }
 
                 pantalla_cal.value = boton.numero
                 estado_de_la_calculadora.value = EstadosCalculadora.AgregandoNumeros
-
             }
 
             EstadosCalculadora.AgregandoNumeros -> {
@@ -138,7 +142,6 @@ fun Calculadora() {
                     estado_de_la_calculadora.value = EstadosCalculadora.SeleccionadoOperacion
                     return
                 }
-
                 pantalla_cal.value = pantalla_cal.value + boton.numero
             }
 
@@ -148,9 +151,7 @@ fun Calculadora() {
                 ){
                     operacion_seleccionada.value = boton.operacion_aritmetica
                     estado_de_la_calculadora.value = EstadosCalculadora.CuandoEstaEnCero
-
                     numero_anterior.value = pantalla_cal.value
-
                     pantalla_cal.value = "0"
                     return
                 }
@@ -158,29 +159,32 @@ fun Calculadora() {
                 else if(boton.operacion_aritmetica == OperacionesAritmeticas.Resultado &&
                     operacion_seleccionada.value != OperacionesAritmeticas.Ninguna){
 
-                    when(operacion_seleccionada.value){
+                    //cadenas a números
+                    val num1 = numero_anterior.value.toDoubleOrNull() ?: 0.0
+                    val num2 = pantalla_cal.value.toDoubleOrNull() ?: 0.0
 
-                        OperacionesAritmeticas.Suma -> {
-                            pantalla_cal.value = numero_anterior.value + "+" + pantalla_cal.value
-                        }
-                        OperacionesAritmeticas.Resta -> {
-                            pantalla_cal.value = numero_anterior.value + "-" + pantalla_cal.value
-                        }
-                        OperacionesAritmeticas.Multiplicacion -> {
-                            pantalla_cal.value = numero_anterior.value + "*" + pantalla_cal.value
-                        }
+                    // Calcular el resultado según la operación seleccionada
+                    val resultado = when(operacion_seleccionada.value){
+                        OperacionesAritmeticas.Suma -> num1 + num2
+                        OperacionesAritmeticas.Resta -> num1 - num2
+                        OperacionesAritmeticas.Multiplicacion -> num1 * num2
                         OperacionesAritmeticas.Division -> {
-                            pantalla_cal.value = numero_anterior.value + "/" + pantalla_cal.value
+                            if (num2 == 0.0) {
+                                0.0
+                            } else {
+                                num1 / num2
+                            }
                         }
-
-                        else -> {}
+                        else -> 0.0
                     }
+                    // Actualizar la pantalla con el resultado
+                    pantalla_cal.value = resultado.toString()
                     estado_de_la_calculadora.value = EstadosCalculadora.MostrandoResultado
                     return
                 }
                 estado_de_la_calculadora.value = EstadosCalculadora.AgregandoNumeros
             }
-            EstadosCalculadora.MostrandoResultado -> {
+                EstadosCalculadora.MostrandoResultado -> {
                 numero_anterior.value  = ""
                 pantalla_cal.value = "0"
                 estado_de_la_calculadora.value = EstadosCalculadora.CuandoEstaEnCero
@@ -188,19 +192,22 @@ fun Calculadora() {
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize().background(color = GreenB),
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(color = GreenB),
         verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally) {
+        horizontalAlignment = Alignment.CenterHorizontally)
+    {
         Text(text = "${pantalla_cal.value}", modifier = Modifier
             .padding(25.dp)
             .fillMaxWidth()
-            //.fillMaxHeight(0.33f)
-            .background(color = PantaGr)
-            .height(200.dp),
+            .background(color = PantaGr, shape = RoundedCornerShape(10.dp))
+            .height(250.dp)
+            .padding(8.dp),
             textAlign = TextAlign.End,
             color = Color.White,
             fontSize = 55.sp,
-            maxLines = 5,
+            maxLines = 5
         )
 
         Column(modifier = Modifier
@@ -208,30 +215,25 @@ fun Calculadora() {
             .background(color = GreenB),
             verticalArrangement = Arrangement.SpaceEvenly) {
             for(fila_de_botones in hileras_de_botones_a_dibujar){
-                Row(horizontalArrangement = Arrangement.SpaceAround,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(5.dp)) {
+                Row(horizontalArrangement = Arrangement.SpaceAround, modifier = Modifier.fillMaxWidth().padding(5.dp)){
                     for(boton_a_dibujar in fila_de_botones){
                         when(estado_de_la_calculadora.value){
-                            EstadosCalculadora.SeleccionadoOperacion -> {
-                                Boton(boton_a_dibujar.operacion_a_mostrar, alPulsar = {
-                                    pulsar_boton(boton_a_dibujar)
-                                })
-                            }
+                            SeleccionadoOperacion -> {
+                                Boton(boton_a_dibujar.operacion_a_mostrar, alPulsar = { pulsar_boton(boton_a_dibujar)})}
                             else -> {
-                                Boton(boton_a_dibujar.numero, alPulsar = {
-                                    pulsar_boton(boton_a_dibujar)
-                                })
+                                Boton(boton_a_dibujar.numero, alPulsar = { pulsar_boton(boton_a_dibujar) })
                             }
                         }
-
                     }
                 }
             }
         }
     }
 }
+
+
+
+
 @Composable
 fun Boton(etiqueta: String, alPulsar: () -> Unit = {}){
     Button(
@@ -239,8 +241,7 @@ fun Boton(etiqueta: String, alPulsar: () -> Unit = {}){
         modifier = Modifier
             .size(80.dp),
         shape = CircleShape,
-        colors = ButtonDefaults.buttonColors(containerColor = GreenN),
-
+        colors = ButtonDefaults.buttonColors(containerColor = GreenN)
         ){
         Text(etiqueta,
             modifier = Modifier,
@@ -250,15 +251,13 @@ fun Boton(etiqueta: String, alPulsar: () -> Unit = {}){
             fontSize = 16.sp
         )
     }
-
-
 }
 
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     Calculadora_aTheme {
-        Calculadora()
+        Calculadora(modifier = Modifier.fillMaxSize())
     }
 }
 
